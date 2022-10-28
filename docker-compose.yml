@@ -1,0 +1,45 @@
+version: "3"
+services:
+  postgres_leaders:
+    image: library/postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: backend
+      POSTGRES_PASSWORD: "goddesSana"
+      POSTGRES_DB: leaders_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./postgres/:/docker-entrypoint-initdb.d/
+
+  nginx_leaders:
+    image: nginx:1.19.0
+    restart: always
+    depends_on:
+      - backend
+    links:
+      - backend:backend
+    volumes:
+      - ./nginx:/etc/nginx
+      - ./tables:/tables
+      - ../static:/static
+      - ../certs:/certs
+    ports:
+      - 80:80
+      - 443:443
+    logging:
+      driver: none
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    depends_on:
+      - postgres_leaders
+    volumes: 
+      - ./tables/:/tables/:rw
+    ports:
+      - 8080:8080
+
+volumes:
+  db-data:
