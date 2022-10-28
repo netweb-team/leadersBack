@@ -28,5 +28,5 @@ jobs:
           host: ${{ secrets.HOST }}
           user: ${{ secrets.USER }}
           pass: ${{ secrets.PASS }}
-          first_ssh: cd backend/ar-exhibition && git checkout main && git pull
+          first_ssh: cd backend/ && git checkout main && git pull
           last_ssh: docker-compose build && docker-compose stop && docker rm $(docker ps -aq) && docker-compose up -d
