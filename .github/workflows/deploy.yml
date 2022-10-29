@@ -9,14 +9,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.17.x
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Run tests
-        run: go mod tidy && go test -v -coverpkg=./... -coverprofile=profile.cov ./... && go tool cover -func profile.cov
+      - run: go mod tidy && go test -v -coverpkg=./... -coverprofile=profile.cov ./... && go tool cover -func profile.cov
         
   deploy:
     needs: test
@@ -33,4 +30,4 @@ jobs:
           scp: |
             ./ => ~/backend/
           last_ssh: |
-            docker compose build && docker compose stop && docker rm $(docker ps -aq) && docker compose up -d
+            cd ~/backend && docker compose build && docker compose stop && docker rm $(docker ps -aq) && docker compose up -d
