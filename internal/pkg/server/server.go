@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"leaders_apartments/internal/pkg/config"
 	"leaders_apartments/internal/pkg/database"
 	"leaders_apartments/internal/pkg/htmlparser"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 func Run() {
@@ -23,8 +25,10 @@ func Run() {
 	api := e.Group("/api")
 	api.GET("", hello)
 	api.GET("/html", parseHTML)
+	log.Info(e.Routes()[0].Path + " " + e.Routes()[1].Path)
 
 	// Start server
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	e.Logger.Fatal(e.Start(cfg.Port))
 }
 
