@@ -9,7 +9,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/gommon/log"
 )
 
 func Run() {
@@ -25,7 +24,7 @@ func Run() {
 	api := e.Group("/api")
 	api.GET("", hello)
 	api.GET("/html", parseHTML)
-	log.Info(e.Routes()[0].Path + " " + e.Routes()[1].Path)
+	api.GET("/html/ad", parseAdHTML)
 
 	// Start server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -38,5 +37,10 @@ func hello(ctx echo.Context) error {
 
 func parseHTML(ctx echo.Context) error {
 	result := htmlparser.Search(ctx.QueryParam("url"))
+	return ctx.JSON(http.StatusOK, result)
+}
+
+func parseAdHTML(ctx echo.Context) error {
+	result := htmlparser.Ad(ctx.QueryParam("url"), ctx.QueryParam("floor"))
 	return ctx.JSON(http.StatusOK, result)
 }

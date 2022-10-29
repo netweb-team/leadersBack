@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"leaders_apartments/internal/pkg/domain"
 	"strconv"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 	"github.com/antchfx/xpath"
@@ -39,7 +40,7 @@ func ListParse(links *[]string, url, limit string, page int) *html.Node {
 		log.Error("Bad url:", err)
 		return nil
 	}
-	if list, err := htmlquery.QueryAll(doc, `//a[@class="search-item__item-link"])`); err == nil {
+	if list, err := htmlquery.QueryAll(doc, `//a[@class="search-item__item-link"]`); err == nil {
 		for _, el := range list {
 			*links = append(*links, "https:"+htmlquery.SelectAttr(el, "href"))
 		}
@@ -48,4 +49,22 @@ func ListParse(links *[]string, url, limit string, page int) *html.Node {
 		return nil
 	}
 	return doc
+}
+
+func Ad(url, floor string) *domain.AdPage {
+	doc, err := htmlquery.LoadURL(url)
+	if err != nil {
+		log.Error("Bad url:", err)
+		return nil
+	}
+	if coord, err := htmlquery.Query(doc, `//div[@class="yamap-container"]`); err == nil {
+		data := htmlquery.SelectAttr(coord, "data-thumb")
+		begin := strings.Index(data, "=") + 1
+		end := begin + strings.Index(data[begin:], "&")
+		coords := strings.Split(data[begin:end], ",")
+		return &domain.AdPage{Longitude: coords[0], Latitude: coords[1]}
+	} else {
+		log.Error(err)
+	}
+	return nil
 }
