@@ -23,9 +23,13 @@ func Search(url string) *domain.SearchPage {
 		log.Error("Bad url:", err)
 		return nil
 	}
-	list, err := htmlquery.QueryAll(doc, "//a[@class = search-item__title-link search-item__item-link]")
-	for _, el := range list {
-		links = append(links, "https:"+htmlquery.SelectAttr(el, "href"))
+	if list, err := htmlquery.QueryAll(doc, "//a[@class = search-item__title-link search-item__item-link]"); err == nil {
+		for _, el := range list {
+			links = append(links, "https:"+htmlquery.SelectAttr(el, "href"))
+		}
+	} else {
+		log.Error(err)
+		return nil
 	}
 	log.Info(lastPage)
 	return &domain.SearchPage{Links: links}
