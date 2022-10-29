@@ -3,6 +3,7 @@ module leaders_apartments
 go 1.17
 
 require (
+	github.com/antchfx/htmlquery v1.2.5
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/labstack/echo/v4 v4.9.1
@@ -10,7 +11,9 @@ require (
 )
 
 require (
+	github.com/antchfx/xpath v1.2.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

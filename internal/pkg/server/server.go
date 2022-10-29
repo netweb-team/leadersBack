@@ -3,6 +3,7 @@ package server
 import (
 	"leaders_apartments/internal/pkg/config"
 	"leaders_apartments/internal/pkg/database"
+	"leaders_apartments/internal/pkg/htmlparser"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -19,7 +20,9 @@ func Run() {
 	e.Logger.Debug(db)
 
 	// Routes
-	e.GET("/api", hello)
+	api := e.Group("/api")
+	api.GET("", hello)
+	api.GET("/html", parseHTML)
 
 	// Start server
 	e.Logger.Fatal(e.Start(cfg.Port))
@@ -27,4 +30,9 @@ func Run() {
 
 func hello(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, "hello")
+}
+
+func parseHTML(ctx echo.Context) error {
+	result := htmlparser.Search(ctx.QueryParam("url"))
+	return ctx.JSON(http.StatusOK, result)
 }
