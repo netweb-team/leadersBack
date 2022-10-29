@@ -16,13 +16,11 @@ services:
     restart: always
     depends_on:
       - backend
-    links:
-      - backend:backend
     volumes:
       - ./nginx:/etc/nginx
+      - ../certs:/certs
       - ./tables:/tables
       - ../static:/static
-      - ../certs:/certs
     ports:
       - 80:80
       - 443:443
@@ -38,8 +36,6 @@ services:
       - postgres_leaders
     volumes: 
       - ./tables/:/tables/:rw
-    ports:
-      - 8080:8080
 
 volumes:
   db-data:
