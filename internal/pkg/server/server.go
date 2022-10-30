@@ -6,9 +6,11 @@ import (
 	"leaders_apartments/internal/pkg/database"
 	"leaders_apartments/internal/pkg/htmlparser"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 func Run() {
@@ -36,11 +38,13 @@ func hello(ctx echo.Context) error {
 }
 
 func parseHTML(ctx echo.Context) error {
-	result := htmlparser.Search(ctx.QueryParam("url"))
+	url := ctx.QueryParam("url")
+	log.Info(url)
+	result := htmlparser.Search(strings.ReplaceAll(url, ",", "&"))
 	return ctx.JSON(http.StatusOK, result)
 }
 
 func parseAdHTML(ctx echo.Context) error {
-	result := htmlparser.Ad(ctx.QueryParam("url"), ctx.QueryParam("floor"))
+	result := htmlparser.Ad(ctx.QueryParam("url"))
 	return ctx.JSON(http.StatusOK, result)
 }
