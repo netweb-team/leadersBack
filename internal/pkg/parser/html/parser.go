@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/antchfx/htmlquery"
+	"github.com/antchfx/xpath"
 	"github.com/labstack/gommon/log"
 	"golang.org/x/net/html"
 )
@@ -27,9 +28,7 @@ func Search(url string) *domain.SearchPage {
 		return nil
 	}
 
-	//expr, _ := xpath.Compile(`count(//a[@class="pagination-block__page-link"])`)
-	//v := expr.Evaluate(htmlquery.CreateXPathNavigator(doc)).(float64)
-	ads, _ := htmlquery.Query(doc, `//div[@data-name="SummaryHeader"]`)
+	ads := htmlquery.QuerySelector(doc, divSummary)
 	adsTxt := htmlquery.InnerText(ads)
 	lastPage, _ = strconv.Atoi(adsTxt[strings.Index(adsTxt, " ")+1 : strings.LastIndex(adsTxt, " ")])
 	lastPage /= psize
@@ -48,13 +47,9 @@ func ListParse(links *[]string, url string, page int) *html.Node {
 		log.Error("Bad url:", err)
 		return nil
 	}
-	if list, err := htmlquery.QueryAll(doc, `//div[@data-name="LinkArea"]/a`); err == nil {
-		for _, el := range list {
-			*links = append(*links, htmlquery.SelectAttr(el, "href"))
-		}
-	} else {
-		log.Error(err)
-		return nil
+	list := htmlquery.QuerySelectorAll(doc, divLinkArea)
+	for _, el := range list {
+		*links = append(*links, htmlquery.SelectAttr(el, "href"))
 	}
 	return doc
 }
@@ -65,11 +60,7 @@ func Ad(url string) *domain.AdPage {
 		log.Error("Bad url:", err)
 		return nil
 	}
-	priceNode, err := htmlquery.Query(doc, `//span[@itemprop="price"]`)
-	if err != nil {
-		log.Error(err)
-		return nil
-	}
+	priceNode := htmlquery.QuerySelector(doc, spanPrice)
 	priceStr := htmlquery.SelectAttr(priceNode, "content")
 	price, _ := strconv.Atoi(strings.ReplaceAll(priceStr[:strings.LastIndex(priceStr, " ")], " ", ""))
 
@@ -82,18 +73,10 @@ func Ad(url string) *domain.AdPage {
 	coords := new(domain.Coordinates)
 	json.NewDecoder(resp.Body).Decode(coords)
 
-	geoNode, _ := htmlquery.Query(doc, `//div[@data-name="Geo"]`)
-	addrNode, err := htmlquery.Query(geoNode, `//span[@itemprop="name"]`)
-	if err != nil {
-		log.Error(err)
-		return nil
-	}
+	geoNode := htmlquery.QuerySelector(doc, divGeo)
+	addrNode := htmlquery.QuerySelector(geoNode, spanName)
 	addr := htmlquery.SelectAttr(addrNode, "content")
-	metroNode, err := htmlquery.Query(geoNode, `//li[position()=1]`)
-	if err != nil {
-		log.Error(err)
-		return nil
-	}
+	metroNode := htmlquery.QuerySelector(geoNode, li1)
 
 	result := &domain.AdPage{
 		Address: addr,
@@ -106,10 +89,10 @@ func Ad(url string) *domain.AdPage {
 			result.Latitude, result.Longitude = k[:i], k[i+1:]
 		}
 	}
-	summary, _ := htmlquery.QueryAll(doc, `//div[@data-testid="object-summary-description-info"]`)
+	summary := htmlquery.QuerySelectorAll(doc, divInfo)
 	for _, el := range summary {
-		title, _ := htmlquery.Query(el, `//div[@data-testid="object-summary-description-title"]`)
-		value, _ := htmlquery.Query(el, `//div[@data-testid="object-summary-description-value"]`)
+		title := htmlquery.QuerySelector(el, divTitle)
+		value := htmlquery.QuerySelector(el, divValue)
 		switch htmlquery.InnerText(title) {
 		case "Общая":
 			result.TotalArea = htmlquery.InnerText(value)
@@ -122,10 +105,10 @@ func Ad(url string) *domain.AdPage {
 			result.Year = htmlquery.InnerText(value)
 		}
 	}
-	addFeature, _ := htmlquery.QueryAll(doc, `//li[@data-name="AdditionalFeatureItem"]`)
+	addFeature := htmlquery.QuerySelectorAll(doc, liFeature)
 	for _, el := range addFeature {
-		title, _ := htmlquery.Query(el, `//span[position()=1]`)
-		value, _ := htmlquery.Query(el, `//span[position()=2]`)
+		title := htmlquery.QuerySelector(el, span1)
+		value := htmlquery.QuerySelector(el, span2)
 		switch htmlquery.InnerText(title) {
 		case "Балкон/лоджия":
 			result.Balcony = htmlquery.InnerText(value)
@@ -133,10 +116,10 @@ func Ad(url string) *domain.AdPage {
 			result.Renovation = htmlquery.InnerText(value)
 		}
 	}
-	items, _ := htmlquery.QueryAll(doc, `//div[@data-name="Item"]`)
+	items := htmlquery.QuerySelectorAll(doc, divItem)
 	for _, el := range items {
-		title, _ := htmlquery.Query(el, `//div[position()=1]`)
-		value, _ := htmlquery.Query(el, `//div[position()=2]`)
+		title := htmlquery.QuerySelector(el, div1)
+		value := htmlquery.QuerySelector(el, div2)
 		switch htmlquery.InnerText(title) {
 		case "Год постройки":
 			result.Year = htmlquery.InnerText(value)
@@ -145,4 +128,24 @@ func Ad(url string) *domain.AdPage {
 		}
 	}
 	return result
+}
+
+var divSummary, divLinkArea, spanPrice, divGeo, spanName, li1, divInfo, divTitle, divValue, liFeature, span1, span2, div1, div2, divItem *xpath.Expr
+
+func init() {
+	divSummary = xpath.MustCompile(`//div[@data-name="SummaryHeader"]`)
+	divLinkArea = xpath.MustCompile(`//div[@data-name="LinkArea"]/a`)
+	spanPrice = xpath.MustCompile(`//span[@itemprop="price"]`)
+	divGeo = xpath.MustCompile(`//div[@data-name="Geo"]`)
+	spanName = xpath.MustCompile(`//span[@itemprop="name"]`)
+	li1 = xpath.MustCompile(`//li[position()=1]`)
+	divInfo = xpath.MustCompile(`//div[@data-testid="object-summary-description-info"]`)
+	divTitle = xpath.MustCompile(`//div[@data-testid="object-summary-description-title"]`)
+	divValue = xpath.MustCompile(`//div[@data-testid="object-summary-description-value"]`)
+	liFeature = xpath.MustCompile(`//li[@data-name="AdditionalFeatureItem"]`)
+	span1 = xpath.MustCompile(`//span[position()=1]`)
+	span2 = xpath.MustCompile(`//span[position()=2]`)
+	div1 = xpath.MustCompile(`//div[position()=1]`)
+	div2 = xpath.MustCompile(`//div[position()=2]`)
+	divItem = xpath.MustCompile(`//div[@data-name="Item"]`)
 }

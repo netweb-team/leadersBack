@@ -21,7 +21,7 @@ func (u *serverUsecases) ImportXslx(f io.Reader) *domain.Table {
 		return nil
 	}
 
-	if u.repo.SaveTable(data.Path) != nil {
+	if data.ID, err = u.repo.SaveTable(data.Path); err != nil {
 		os.Remove(data.Path)
 		return nil
 	}

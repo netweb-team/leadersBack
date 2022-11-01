@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	SaveTable(filename string) error
+	SaveTable(filename string) (int, error)
 }
 
 type Usecase interface {

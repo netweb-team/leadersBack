@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	insertTable = `insert into tables (path) values($1);`
+	insertTable = `insert into tables (path) values($1) returning id;`
 )
 
 type dbRepository struct {
@@ -20,10 +20,11 @@ func New(db *database.DBManager) domain.Repository {
 	return &dbRepository{db}
 }
 
-func (repo *dbRepository) SaveTable(filename string) error {
-	_, err := repo.db.Pool.Exec(context.Background(), insertTable, filename)
+func (repo *dbRepository) SaveTable(filename string) (int, error) {
+	var id int
+	err := repo.db.Pool.QueryRow(context.Background(), insertTable, filename).Scan(&id)
 	if err != nil {
 		log.Error("Unable to save path to table: ", err)
 	}
-	return err
+	return id, err
 }

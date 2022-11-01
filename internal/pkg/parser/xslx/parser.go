@@ -6,6 +6,7 @@ import (
 	"leaders_apartments/internal/pkg/config"
 	"leaders_apartments/internal/pkg/domain"
 	"leaders_apartments/internal/pkg/utils"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/gommon/log"
@@ -43,7 +44,7 @@ func Parse(f io.Reader) (*domain.Table, error) {
 			case 0:
 				row.Address = c.Value()
 			case 1:
-				if row.Rooms, err = c.Uint(); err != nil {
+				if row.Rooms, err = strconv.ParseUint(c.Value(), 10, 64); err != nil {
 					log.Info("Room count in table is not uint: ", err)
 					return nil, err
 				}
@@ -54,7 +55,7 @@ func Parse(f io.Reader) (*domain.Table, error) {
 				}
 				row.Segment = c.Value()
 			case 3:
-				if row.Floors, err = c.Uint(); err != nil {
+				if row.Floors, err = strconv.ParseUint(c.Value(), 10, 64); err != nil {
 					log.Info("Total floors in table is not uint: ", err)
 					return nil, err
 				}
@@ -65,17 +66,17 @@ func Parse(f io.Reader) (*domain.Table, error) {
 				}
 				row.Walls = c.Value()
 			case 5:
-				if row.CFloor, err = c.Uint(); err != nil {
+				if row.CFloor, err = strconv.ParseUint(c.Value(), 10, 64); err != nil {
 					log.Info("Current floor in table is not uint: ", err)
 					return nil, err
 				}
 			case 6:
-				if row.Total, err = c.Float(); err != nil {
+				if row.Total, err = strconv.ParseFloat(c.Value(), 64); err != nil {
 					log.Info("Total square in table is not float: ", err)
 					return nil, err
 				}
 			case 7:
-				if row.Kitchen, err = c.Float(); err != nil {
+				if row.Kitchen, err = strconv.ParseFloat(c.Value(), 64); err != nil {
 					log.Info("Kitchen square in table is not float: ", err)
 					return nil, err
 				}
