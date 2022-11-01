@@ -1,7 +1,9 @@
 package usecase
 
 import (
+	"io"
 	"leaders_apartments/internal/pkg/domain"
+	"leaders_apartments/internal/pkg/parser/xslx"
 	"os"
 )
 
@@ -13,6 +15,15 @@ func New(repo domain.Repository) domain.Usecase {
 	return &serverUsecases{repo}
 }
 
-func (u *serverUsecases) ImportXslx(f *os.File) error {
-	return nil
+func (u *serverUsecases) ImportXslx(f io.Reader) *domain.Table {
+	data, err := xslx.Parse(f)
+	if err != nil {
+		return nil
+	}
+
+	if u.repo.SaveTable(data.Path) != nil {
+		os.Remove(data.Path)
+		return nil
+	}
+	return data
 }

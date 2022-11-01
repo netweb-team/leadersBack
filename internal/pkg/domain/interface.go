@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"os"
+	"io"
 
 	"github.com/labstack/echo/v4"
 )
@@ -11,7 +11,7 @@ type Repository interface {
 }
 
 type Usecase interface {
-	ImportXslx(f *os.File) error
+	ImportXslx(f io.Reader) *Table
 }
 
 type Handler interface {
