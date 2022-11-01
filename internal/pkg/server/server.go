@@ -4,7 +4,10 @@ import (
 	"crypto/tls"
 	"leaders_apartments/internal/pkg/config"
 	"leaders_apartments/internal/pkg/database"
+  "leaders_apartments/internal/pkg/handler"
 	"leaders_apartments/internal/pkg/htmlparser"
+	"leaders_apartments/internal/pkg/repository"
+	"leaders_apartments/internal/pkg/usecase"
 	"net/http"
 	"strings"
 
@@ -20,13 +23,14 @@ func Run() {
 
 	cfg := config.New()
 	db := database.Connect(cfg.Postgres)
-	e.Logger.Debug(db)
+	repo := repository.New(db)
+	uc := usecase.New(repo)
+	handlers := handler.New(uc)
 
 	// Routes
 	api := e.Group("/api")
 	api.GET("", hello)
-	api.GET("/html", parseHTML)
-	api.GET("/html/ad", parseAdHTML)
+	api.POST("/pools", handlers.ImportXslx)
 
 	// Start server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
