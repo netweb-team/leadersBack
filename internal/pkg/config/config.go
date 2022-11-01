@@ -19,6 +19,8 @@ type Config struct {
 	Postgres *DBConfig `json:"postgres"`
 	Host     string    `json:"host"`
 	Port     string    `json:"port"`
+	Path     string    `json:"path"`
+	ApiKey   string    `json:"api_token"`
 }
 
 var config = &Config{}
