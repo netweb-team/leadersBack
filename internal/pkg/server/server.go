@@ -3,6 +3,9 @@ package server
 import (
 	"leaders_apartments/internal/pkg/config"
 	"leaders_apartments/internal/pkg/database"
+	"leaders_apartments/internal/pkg/handler"
+	"leaders_apartments/internal/pkg/repository"
+	"leaders_apartments/internal/pkg/usecase"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -16,10 +19,14 @@ func Run() {
 
 	cfg := config.New()
 	db := database.Connect(cfg.Postgres)
-	e.Logger.Debug(db)
+	repo := repository.New(db)
+	uc := usecase.New(repo)
+	handlers := handler.New(uc)
 
 	// Routes
-	e.GET("/api", hello)
+	api := e.Group("/api")
+	api.GET("", hello)
+	api.POST("/pools", handlers.ImportXslx)
 
 	// Start server
 	e.Logger.Fatal(e.Start(cfg.Port))
