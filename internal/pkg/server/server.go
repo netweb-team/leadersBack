@@ -4,8 +4,8 @@ import (
 	"crypto/tls"
 	"leaders_apartments/internal/pkg/config"
 	"leaders_apartments/internal/pkg/database"
-  "leaders_apartments/internal/pkg/handler"
-	"leaders_apartments/internal/pkg/htmlparser"
+	"leaders_apartments/internal/pkg/handler"
+	"leaders_apartments/internal/pkg/parser/html"
 	"leaders_apartments/internal/pkg/repository"
 	"leaders_apartments/internal/pkg/usecase"
 	"net/http"
@@ -44,11 +44,11 @@ func hello(ctx echo.Context) error {
 func parseHTML(ctx echo.Context) error {
 	url := ctx.QueryParam("url")
 	log.Info(url)
-	result := htmlparser.Search(strings.ReplaceAll(url, ",", "&"))
+	result := html.Search(strings.ReplaceAll(url, ",", "&"))
 	return ctx.JSON(http.StatusOK, result)
 }
 
 func parseAdHTML(ctx echo.Context) error {
-	result := htmlparser.Ad(ctx.QueryParam("url"))
+	result := html.Ad(ctx.QueryParam("url"))
 	return ctx.JSON(http.StatusOK, result)
 }

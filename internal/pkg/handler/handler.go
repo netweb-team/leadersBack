@@ -38,3 +38,7 @@ func (h *serverHandlers) ImportXslx(ctx echo.Context) error {
 	}
 	return EchoResponse(ctx, http.StatusInternalServerError, nil)
 }
+
+func (h *serverHandlers) FindAnalogs(ctx echo.Context) error {
+	return EchoResponse(ctx, http.StatusInternalServerError, nil)
+}

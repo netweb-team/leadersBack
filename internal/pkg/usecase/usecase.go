@@ -27,3 +27,7 @@ func (u *serverUsecases) ImportXslx(f io.Reader) *domain.Table {
 	}
 	return data
 }
+
+func (u *serverUsecases) FindAnalogs(pattern *domain.Row) []*domain.AdPage {
+	return nil
+}

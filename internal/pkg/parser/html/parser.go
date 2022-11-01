@@ -1,4 +1,4 @@
-package htmlparser
+package html
 
 import (
 	"encoding/json"
