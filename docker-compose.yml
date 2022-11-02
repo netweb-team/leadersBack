@@ -35,7 +35,7 @@ services:
     depends_on:
       - postgres_leaders
     volumes: 
-      - ./tables/:/tables/:rw
+      - ./tables/:/app/tables/:rw
 
 volumes:
   db-data:
