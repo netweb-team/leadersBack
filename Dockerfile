@@ -1,7 +1,5 @@
 FROM golang:latest as build
 
-WORKDIR /app
-
 COPY cmd/main.go main.go
 COPY internal/ internal/
 COPY go.mod go.mod
@@ -15,7 +13,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY --from=build /app/main main
+COPY --from=build main main
 COPY config.json config.json
 
 CMD ./main

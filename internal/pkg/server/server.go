@@ -31,6 +31,7 @@ func Run() {
 	api := e.Group("/api")
 	api.GET("", hello)
 	api.POST("/pools", handlers.ImportXslx)
+	api.GET("/pools/:id", handlers.GetPool)
 
 	// Start server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

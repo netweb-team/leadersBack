@@ -12,10 +12,10 @@ type Repository interface {
 
 type Usecase interface {
 	ImportXslx(f io.Reader) *Table
-	FindAnalogs(pattern *Row) []*AdPage
+	FindAnalogs(id, ptnIndex int) []*AdPage
 }
 
 type Handler interface {
 	ImportXslx(ctx echo.Context) error
-	FindAnalogs(ctx echo.Context) error
+	GetPool(ctx echo.Context) error
 }

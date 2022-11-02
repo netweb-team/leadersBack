@@ -2,11 +2,11 @@ package domain
 
 type Row struct {
 	Address string  `json:"a"`
-	Rooms   uint64  `json:"r"`
+	Rooms   uint    `json:"r"`
 	Segment string  `json:"s"`
-	Floors  uint64  `json:"f"`
+	Floors  uint    `json:"f"`
 	Walls   string  `json:"w"`
-	CFloor  uint64  `json:"cf"`
+	CFloor  uint    `json:"cf"`
 	Total   float64 `json:"t"`
 	Kitchen float64 `json:"k"`
 	Balcony string  `json:"b"`

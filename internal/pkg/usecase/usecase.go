@@ -28,6 +28,10 @@ func (u *serverUsecases) ImportXslx(f io.Reader) *domain.Table {
 	return data
 }
 
-func (u *serverUsecases) FindAnalogs(pattern *domain.Row) []*domain.AdPage {
+func (u *serverUsecases) FindAnalogs(id, ptnIndex int) []*domain.AdPage {
+	// get pattern from xslx
+	// make mapbox req for coordinates
+	// find analogs cian
+	// save something in db
 	return nil
 }
