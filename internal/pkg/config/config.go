@@ -16,11 +16,14 @@ type DBConfig struct {
 }
 
 type Config struct {
-	Postgres *DBConfig `json:"postgres"`
-	Host     string    `json:"host"`
-	Port     string    `json:"port"`
-	Path     string    `json:"path"`
-	ApiKey   string    `json:"api_token"`
+	Postgres  *DBConfig `json:"postgres"`
+	Host      string    `json:"host"`
+	Port      string    `json:"port"`
+	Path      string    `json:"path"`
+	ApiKey    string    `json:"api_token"`
+	SearchApi string    `json:"search_api"`
+	MapApi    string    `json:"map_api"`
+	CoordApi  string    `json:"coord_api"`
 }
 
 var config = &Config{}

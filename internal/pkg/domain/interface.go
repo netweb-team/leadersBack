@@ -8,11 +8,12 @@ import (
 
 type Repository interface {
 	SaveTable(filename string) (int, error)
+	GetTableName(id int) (string, error)
 }
 
 type Usecase interface {
 	ImportXslx(f io.Reader) *Table
-	FindAnalogs(id, ptnIndex int) []*AdPage
+	FindAnalogs(id, ptnIndex int) *PatternAnalogs
 }
 
 type Handler interface {

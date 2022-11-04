@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	insertTable = `insert into tables (path) values($1) returning id;`
+	insertTable     = `insert into tables (path) values($1) returning id;`
+	selectTableName = `select path from tables where id = $1;`
 )
 
 type dbRepository struct {
@@ -27,4 +28,13 @@ func (repo *dbRepository) SaveTable(filename string) (int, error) {
 		log.Error("Unable to save path to table: ", err)
 	}
 	return id, err
+}
+
+func (repo *dbRepository) GetTableName(id int) (string, error) {
+	var name string
+	err := repo.db.Pool.QueryRow(context.Background(), selectTableName, id).Scan(&name)
+	if err != nil {
+		log.Error("Unable to get path to table: ", err)
+	}
+	return name, err
 }
