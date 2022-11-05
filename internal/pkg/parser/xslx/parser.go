@@ -51,6 +51,16 @@ func Parse(f io.Reader) (*domain.Table, error) {
 	return result, nil
 }
 
+func ReadTable(filename string) []*domain.Row {
+	xl, err := xlsx.Open(filename)
+	if err != nil {
+		log.Error("Cannot open file for read: ", err)
+		return nil
+	}
+	defer xl.Close()
+	return parseSheet(xl.Sheet(0))
+}
+
 func ReadRow(filename string, id int) *domain.Row {
 	xl, err := xlsx.Open(filename)
 	if err != nil {
@@ -148,4 +158,34 @@ func parseRow(sheet xlsx.Sheet, i, total int) *domain.Row {
 		}
 	}
 	return row
+}
+
+func SavePrice(filename string, table []*domain.Row) string {
+	xl, err := xlsx.Open(filename)
+	if err != nil {
+		log.Error("Cannot open file for read: ", err)
+		return ""
+	}
+	defer xl.Close()
+	sh := xl.Sheet(0)
+	sh.Cell(11, 0).SetValue("Цена")
+
+	xlp := xlsx.New()
+	defer xl.Close()
+	shp := xlp.AddSheet("price")
+	shp.Cell(0, 0).SetValue("Цена")
+
+	for i, row := range table {
+		row.Cost = int(row.AvgCost * row.Total)
+		sh.Cell(11, i+1).SetValue(row.Cost)
+		shp.Cell(0, i+1).SetValue(row.Cost)
+	}
+
+	path := config.New().Path + utils.RandString(nameLen) + ext
+	if err := xlp.SaveAs(path); err != nil {
+		log.Error("Cannot save file to path:", path, err)
+		return ""
+	}
+	xl.Save()
+	return path
 }

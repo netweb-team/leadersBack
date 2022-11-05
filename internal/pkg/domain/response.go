@@ -6,6 +6,7 @@ type Response struct {
 }
 
 type PatternAnalogs struct {
-	Pattern *Row   `json:"pattern"`
-	Analogs []*Row `json:"analogs"`
+	Pattern *Row            `json:"pattern"`
+	Analogs []*Row          `json:"analogs"`
+	Correct []*CorrectCoefs `json:"coefs"`
 }

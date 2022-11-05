@@ -16,7 +16,7 @@ import (
 func Run() {
 	e := echo.New()
 	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	//e.Use(middleware.Recover())
 
 	cfg := config.New()
 	db := database.Connect(cfg.Postgres)
@@ -27,8 +27,9 @@ func Run() {
 	// Routes
 	api := e.Group("/api")
 	api.GET("", hello)
-	api.POST("/pools", handlers.ImportXslx)
+	api.POST("/pools", handlers.ImportXlsx)
 	api.GET("/pools/:id", handlers.GetPool)
+	api.POST("/pools/:id", handlers.CalcPool)
 
 	// Start server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
