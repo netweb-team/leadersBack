@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/antchfx/htmlquery v1.2.5
 	github.com/antchfx/xpath v1.2.1
+	github.com/ddulesov/gogost v1.0.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/kellydunn/golang-geo v0.7.0

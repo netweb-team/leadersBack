@@ -16,7 +16,8 @@ import (
 func Run() {
 	e := echo.New()
 	e.Use(middleware.Logger())
-	//e.Use(middleware.Recover())
+	e.Use(middleware.Recover())
+	//e.Use(middleware.CSRF())
 
 	cfg := config.New()
 	db := database.Connect(cfg.Postgres)
@@ -27,6 +28,9 @@ func Run() {
 	// Routes
 	api := e.Group("/api")
 	api.GET("", hello)
+	api.POST("/signup", handlers.SignUp)
+	api.POST("/auth", handlers.SignIn)
+	api.DELETE("/auth", handlers.SignOut)
 	api.POST("/pools", handlers.ImportXlsx)
 	api.GET("/pools/:id", handlers.GetPool)
 	api.POST("/pools/:id", handlers.CalcPool)

@@ -4,6 +4,7 @@ import (
 	"leaders_apartments/internal/pkg/domain"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -22,6 +23,13 @@ func EchoResponse(ctx echo.Context, status int, body interface{}) error {
 }
 
 func (h *serverHandlers) ImportXlsx(ctx echo.Context) error {
+	user := 0
+	if c, err := ctx.Cookie("session"); err == nil {
+		user = h.uc.CheckAuth(c.Value, 0)
+	}
+	if user == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
+	}
 	formFile, err := ctx.FormFile("table")
 	if err != nil {
 		log.Info("No file in multipart ", err)
@@ -34,7 +42,7 @@ func (h *serverHandlers) ImportXlsx(ctx echo.Context) error {
 	}
 	defer file.Close()
 
-	if result := h.uc.ImportXlsx(file); result != nil {
+	if result := h.uc.ImportXlsx(file, user); result != nil {
 		return EchoResponse(ctx, http.StatusCreated, result)
 	}
 	return EchoResponse(ctx, http.StatusInternalServerError, nil)
@@ -45,6 +53,9 @@ func (h *serverHandlers) GetPool(ctx echo.Context) error {
 	if err != nil {
 		log.Info("Bad id in url: ", err)
 		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	if c, err := ctx.Cookie("session"); err != nil || h.uc.CheckAuth(c.Value, id) == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
 	}
 	if ptn := ctx.QueryParam("pattern"); len(ptn) > 0 {
 		if p, err := strconv.Atoi(ptn); err == nil {
@@ -71,9 +82,58 @@ func (h *serverHandlers) CalcPool(ctx echo.Context) error {
 		log.Info("Bad id in url: ", err)
 		return EchoResponse(ctx, http.StatusBadRequest, nil)
 	}
+	if c, err := ctx.Cookie("session"); err != nil || h.uc.CheckAuth(c.Value, id) == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
+	}
 	result := h.uc.CalcPool(id)
 	if result == nil {
 		return EchoResponse(ctx, http.StatusNotFound, nil)
 	}
 	return EchoResponse(ctx, http.StatusOK, result)
+}
+
+func newCookie(value string) *http.Cookie {
+	return &http.Cookie{
+		Name:     "session",
+		Value:    value,
+		Expires:  time.Now().Add(240 * time.Hour),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+}
+
+func (h *serverHandlers) SignUp(ctx echo.Context) error {
+	user := new(domain.User)
+	if err := ctx.Bind(&user); err != nil {
+		log.Error(err)
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	value := h.uc.CreateUser(user)
+	if value == "" {
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	ctx.SetCookie(newCookie(value))
+	return EchoResponse(ctx, http.StatusCreated, nil)
+}
+
+func (h *serverHandlers) SignIn(ctx echo.Context) error {
+	user := new(domain.User)
+	if err := ctx.Bind(&user); err != nil {
+		log.Error(err)
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	value := h.uc.CreateAuth(user)
+	if value == "" {
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	ctx.SetCookie(newCookie(value))
+	return EchoResponse(ctx, http.StatusCreated, nil)
+}
+
+func (h *serverHandlers) SignOut(ctx echo.Context) error {
+	if cookie, err := ctx.Cookie("session"); err == nil {
+		h.uc.DeleteAuth(cookie.Value)
+	}
+	return EchoResponse(ctx, http.StatusOK, nil)
 }
