@@ -26,13 +26,13 @@ func New(repo domain.Repository) domain.Usecase {
 	return &serverUsecases{repo}
 }
 
-func (u *serverUsecases) ImportXlsx(f io.Reader) *domain.Table {
+func (u *serverUsecases) ImportXlsx(f io.Reader, user int) *domain.Table {
 	data, err := xslx.Parse(f)
 	if err != nil {
 		return nil
 	}
 
-	if data.ID, err = u.repo.SaveTable(data.Path); err != nil {
+	if data.ID, err = u.repo.SaveTable(data.Path, user); err != nil {
 		os.Remove(data.Path)
 		return nil
 	}
@@ -162,7 +162,10 @@ func (u *serverUsecases) DeleteAuth(cookie string) {
 	u.repo.DeleteCookie(cookie)
 }
 
-func (u *serverUsecases) CheckAuth(cookie string) int {
+func (u *serverUsecases) CheckAuth(cookie string, pool int) int {
+	if pool > 0 {
+		return u.repo.CheckPool(cookie, pool)
+	}
 	return u.repo.CheckCookie(cookie)
 }
 

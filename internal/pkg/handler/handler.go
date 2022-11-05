@@ -23,6 +23,13 @@ func EchoResponse(ctx echo.Context, status int, body interface{}) error {
 }
 
 func (h *serverHandlers) ImportXlsx(ctx echo.Context) error {
+	user := 0
+	if c, err := ctx.Cookie("session"); err == nil {
+		user = h.uc.CheckAuth(c.Value, 0)
+	}
+	if user == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
+	}
 	formFile, err := ctx.FormFile("table")
 	if err != nil {
 		log.Info("No file in multipart ", err)
@@ -35,7 +42,7 @@ func (h *serverHandlers) ImportXlsx(ctx echo.Context) error {
 	}
 	defer file.Close()
 
-	if result := h.uc.ImportXlsx(file); result != nil {
+	if result := h.uc.ImportXlsx(file, user); result != nil {
 		return EchoResponse(ctx, http.StatusCreated, result)
 	}
 	return EchoResponse(ctx, http.StatusInternalServerError, nil)
@@ -46,6 +53,9 @@ func (h *serverHandlers) GetPool(ctx echo.Context) error {
 	if err != nil {
 		log.Info("Bad id in url: ", err)
 		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	if c, err := ctx.Cookie("session"); err != nil || h.uc.CheckAuth(c.Value, id) == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
 	}
 	if ptn := ctx.QueryParam("pattern"); len(ptn) > 0 {
 		if p, err := strconv.Atoi(ptn); err == nil {
@@ -71,6 +81,9 @@ func (h *serverHandlers) CalcPool(ctx echo.Context) error {
 	if err != nil {
 		log.Info("Bad id in url: ", err)
 		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	if c, err := ctx.Cookie("session"); err != nil || h.uc.CheckAuth(c.Value, id) == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
 	}
 	result := h.uc.CalcPool(id)
 	if result == nil {

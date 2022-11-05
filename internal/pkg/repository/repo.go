@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	insertTable     = `insert into tables(path) values($1) returning id;`
+	insertTable     = `insert into tables(path, user_id) values($1, $2) returning id;`
 	selectTableName = `select path from tables where id = $1;`
 	insertPattern   = `insert into patterns(pool_id, pattern, lng, lat, avg_price) values($1, $2, $3, $4, $5);`
 	insertAnalog    = `insert into analogs(lng,lat,addr,room,segment,floors,cur_floor,walls,total,kitchen,balcony,metro,state,price,avg_price,
@@ -20,11 +20,12 @@ const (
 	selectPatterns = `select pattern, avg_price from patterns where pool_id = $1;`
 	selectAnalogs  = `select id,lng,lat,addr,room,segment,floors,cur_floor,walls,total,kitchen,balcony,metro,state,price,avg_price,
 	sale_coef,floor_coef,total_coef,kitchen_coef,balcony_coef,metro_coef,state_coef from analogs where use = 't' and pool = $1 and pattern = $2;`
-	insertCookie = `insert into cookies(user_id, cookie) values($1, $2);`
-	deleteCookie = `delete from cookies where cookie = $1;`
-	selectCookie = `select user_id from cookies where cookie = $1;`
-	insertUser   = `insert into users(login, pass) values($1, $2) returning id;`
-	selectUser   = `select id, login, pass from users where login = $1;`
+	insertCookie     = `insert into cookies(user_id, cookie) values($1, $2);`
+	deleteCookie     = `delete from cookies where cookie = $1;`
+	selectCookie     = `select user_id from cookies where cookie = $1;`
+	insertUser       = `insert into users(login, pass) values($1, $2) returning id;`
+	selectUser       = `select id, login, pass from users where login = $1;`
+	selectCookiePool = `select c.user_id from cookies c join tables t on c.user_id = t.user_id where c.cookie = $1 and t.id = $2;`
 )
 
 type dbRepository struct {
@@ -35,9 +36,9 @@ func New(db *database.DBManager) domain.Repository {
 	return &dbRepository{db}
 }
 
-func (repo *dbRepository) SaveTable(filename string) (int, error) {
+func (repo *dbRepository) SaveTable(filename string, user int) (int, error) {
 	var id int
-	err := repo.db.Pool.QueryRow(context.Background(), insertTable, filename).Scan(&id)
+	err := repo.db.Pool.QueryRow(context.Background(), insertTable, filename, user).Scan(&id)
 	if err != nil {
 		log.Error("Unable to save path to table: ", err)
 	}
@@ -139,6 +140,15 @@ func (repo *dbRepository) CheckCookie(cookie string) int {
 	err := repo.db.Pool.QueryRow(context.Background(), selectCookie, cookie).Scan(&user)
 	if err != nil {
 		log.Info("Cookie checking: ", err)
+	}
+	return user
+}
+
+func (repo *dbRepository) CheckPool(cookie string, pool int) int {
+	user := 0
+	err := repo.db.Pool.QueryRow(context.Background(), selectCookiePool, cookie, pool).Scan(&user)
+	if err != nil {
+		log.Debug("Cookie and pool checking: ", err)
 	}
 	return user
 }

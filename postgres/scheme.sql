@@ -12,7 +12,8 @@ create table cookies (
 
 create table tables (
     id serial primary key,
-    path text not null unique
+    path text not null unique,
+    user_id int not null
 );
 
 create table patterns (
