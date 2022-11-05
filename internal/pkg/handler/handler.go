@@ -4,6 +4,7 @@ import (
 	"leaders_apartments/internal/pkg/domain"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -76,4 +77,50 @@ func (h *serverHandlers) CalcPool(ctx echo.Context) error {
 		return EchoResponse(ctx, http.StatusNotFound, nil)
 	}
 	return EchoResponse(ctx, http.StatusOK, result)
+}
+
+func newCookie(value string) *http.Cookie {
+	return &http.Cookie{
+		Name:     "session",
+		Value:    value,
+		Expires:  time.Now().Add(240 * time.Hour),
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+}
+
+func (h *serverHandlers) SignUp(ctx echo.Context) error {
+	user := new(domain.User)
+	if err := ctx.Bind(&user); err != nil {
+		log.Error(err)
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	value := h.uc.CreateUser(user)
+	if value == "" {
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	ctx.SetCookie(newCookie(value))
+	return EchoResponse(ctx, http.StatusCreated, nil)
+}
+
+func (h *serverHandlers) SignIn(ctx echo.Context) error {
+	user := new(domain.User)
+	if err := ctx.Bind(&user); err != nil {
+		log.Error(err)
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	value := h.uc.CreateAuth(user)
+	if value == "" {
+		return EchoResponse(ctx, http.StatusBadRequest, nil)
+	}
+	ctx.SetCookie(newCookie(value))
+	return EchoResponse(ctx, http.StatusCreated, nil)
+}
+
+func (h *serverHandlers) SignOut(ctx echo.Context) error {
+	if cookie, err := ctx.Cookie("session"); err == nil {
+		h.uc.DeleteAuth(cookie.Value)
+	}
+	return EchoResponse(ctx, http.StatusOK, nil)
 }

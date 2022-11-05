@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,9 +10,11 @@ import (
 	"leaders_apartments/internal/pkg/domain"
 	"leaders_apartments/internal/pkg/parser/html"
 	"leaders_apartments/internal/pkg/parser/xslx"
+	"leaders_apartments/internal/pkg/utils"
 	"net/http"
 	"os"
 
+	"github.com/ddulesov/gogost/gost34112012512"
 	"github.com/labstack/gommon/log"
 )
 
@@ -123,3 +126,44 @@ func (u *serverUsecases) CalcPool(id int) []*domain.Row {
 	//save to db archive
 	return table
 }
+
+func (u *serverUsecases) CreateUser(user *domain.User) string {
+	hasher.Reset()
+	hasher.Write([]byte(user.Password))
+	user.HashPass = hasher.Sum(nil)
+	if u.repo.CreateUser(user) != nil {
+		return ""
+	}
+	cookie := utils.RandString(32)
+	if u.repo.CreateCookie(user.ID, cookie) != nil {
+		return ""
+	}
+	return cookie
+}
+
+func (u *serverUsecases) CreateAuth(user *domain.User) string {
+	hasher.Reset()
+	hasher.Write([]byte(user.Password))
+	user.HashPass = hasher.Sum(nil)
+	dbUser := u.repo.GetUser(user.Login)
+	if dbUser == nil || hex.EncodeToString(dbUser.HashPass) != hex.EncodeToString(user.HashPass) {
+		log.Info(dbUser)
+		return ""
+	}
+	cookie := utils.RandString(32)
+	if u.repo.CreateCookie(dbUser.ID, cookie) != nil {
+		log.Info(cookie)
+		return ""
+	}
+	return cookie
+}
+
+func (u *serverUsecases) DeleteAuth(cookie string) {
+	u.repo.DeleteCookie(cookie)
+}
+
+func (u *serverUsecases) CheckAuth(cookie string) int {
+	return u.repo.CheckCookie(cookie)
+}
+
+var hasher = gost34112012512.New()

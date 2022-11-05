@@ -20,6 +20,11 @@ const (
 	selectPatterns = `select pattern, avg_price from patterns where pool_id = $1;`
 	selectAnalogs  = `select id,lng,lat,addr,room,segment,floors,cur_floor,walls,total,kitchen,balcony,metro,state,price,avg_price,
 	sale_coef,floor_coef,total_coef,kitchen_coef,balcony_coef,metro_coef,state_coef from analogs where use = 't' and pool = $1 and pattern = $2;`
+	insertCookie = `insert into cookies(user_id, cookie) values($1, $2);`
+	deleteCookie = `delete from cookies where cookie = $1;`
+	selectCookie = `select user_id from cookies where cookie = $1;`
+	insertUser   = `insert into users(login, pass) values($1, $2) returning id;`
+	selectUser   = `select id, login, pass from users where login = $1;`
 )
 
 type dbRepository struct {
@@ -112,4 +117,46 @@ func (repo *dbRepository) GetAnalogs(id, ptnID int) ([]*domain.Row, []*domain.Co
 		analogs, coefs = append(analogs, a), append(coefs, c)
 	}
 	return analogs, coefs
+}
+
+func (repo *dbRepository) CreateCookie(id int, cookie string) error {
+	_, err := repo.db.Pool.Exec(context.Background(), insertCookie, id, cookie)
+	if err != nil {
+		log.Info("Cookie creating: ", err)
+	}
+	return err
+}
+
+func (repo *dbRepository) DeleteCookie(cookie string) {
+	_, err := repo.db.Pool.Exec(context.Background(), deleteCookie, cookie)
+	if err != nil {
+		log.Info("Cookie deleting: ", err)
+	}
+}
+
+func (repo *dbRepository) CheckCookie(cookie string) int {
+	user := 0
+	err := repo.db.Pool.QueryRow(context.Background(), selectCookie, cookie).Scan(&user)
+	if err != nil {
+		log.Info("Cookie checking: ", err)
+	}
+	return user
+}
+
+func (repo *dbRepository) CreateUser(user *domain.User) error {
+	err := repo.db.Pool.QueryRow(context.Background(), insertUser, user.Login, user.HashPass).Scan(&user.ID)
+	if err != nil {
+		log.Error("Cannot create user: ", err)
+	}
+	return err
+}
+
+func (repo *dbRepository) GetUser(login string) *domain.User {
+	user := new(domain.User)
+	err := repo.db.Pool.QueryRow(context.Background(), selectUser, login).Scan(&user.ID, &user.Login, &user.HashPass)
+	if err != nil {
+		log.Error("Cannot get user: ", err)
+		return nil
+	}
+	return user
 }

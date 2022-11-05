@@ -4,6 +4,12 @@ create table users (
     pass bytea not null
 );
 
+create table cookies (
+    user_id int,
+    cookie text,
+    primary key(user_id, cookie) 
+);
+
 create table tables (
     id serial primary key,
     path text not null unique
