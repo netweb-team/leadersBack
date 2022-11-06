@@ -13,7 +13,9 @@ create table cookies (
 create table tables (
     id serial primary key,
     path text not null unique,
-    user_id int not null
+    user_id int not null,
+    flats int not null default 0,
+    cdate timestamp not null default now()
 );
 
 create table patterns (
@@ -54,13 +56,14 @@ create table analogs (
     use boolean not null default 't'
 );
 
-create table archive (
-    id serial primary key,
-    pool int not null,
-    pattern int[] not null default '{}',
-    price float8[] not null default '{}',
-    analogs json[] not null default '{}',
-    coefs json[] not null default '{}',
-    price_path text not null,
-    user_id int not null
-);
+-- create table archive (
+--     id serial primary key,
+--     pool int not null,
+--     pattern int[] not null default '{}',
+--     price float8[] not null default '{}',
+--     analogs json[] not null default '{}',
+--     coefs json[] not null default '{}',
+--     price_path text not null,
+--     user_id int not null,
+--     cdate timestamp not null default now()
+-- );
