@@ -18,10 +18,14 @@ type Repository interface {
 	CheckPool(cookie string, pool int) int
 	CreateUser(user *User) error
 	GetUser(login string) *User
+	ChangeCorrect(pool, id int, coefs *CorrectCoefs) int
+	ChangeAnalog(pool, id int) int
+	SavePatternPrice(pool, id int, price float64) error
 }
 
 type Usecase interface {
 	ImportXlsx(f io.Reader, user int) *Table
+	GetPool(id int) *Table
 	FindAnalogs(id, ptnIndex int) *PatternAnalogs
 	CalcPool(id int) []*Row
 	ExportXlsx(id int) string
@@ -29,6 +33,8 @@ type Usecase interface {
 	CreateAuth(user *User) string
 	DeleteAuth(cookie string)
 	CheckAuth(cookie string, pool int) int
+	ChangeCorrect(pool, id int, coefs *CorrectCoefs) *PatternAnalogs
+	ChangeAnalog(pool, id int) *PatternAnalogs
 }
 
 type Handler interface {
@@ -38,4 +44,5 @@ type Handler interface {
 	SignUp(ctx echo.Context) error
 	SignIn(ctx echo.Context) error
 	SignOut(ctx echo.Context) error
+	ChangePool(ctx echo.Context) error
 }

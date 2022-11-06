@@ -34,6 +34,7 @@ func Run() {
 	api.POST("/pools", handlers.ImportXlsx)
 	api.GET("/pools/:id", handlers.GetPool)
 	api.POST("/pools/:id", handlers.CalcPool)
+	api.PUT("/pools/:id", handlers.ChangePool)
 
 	// Start server
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}

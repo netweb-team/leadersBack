@@ -39,6 +39,16 @@ func (u *serverUsecases) ImportXlsx(f io.Reader, user int) *domain.Table {
 	return data
 }
 
+func (u *serverUsecases) GetPool(id int) *domain.Table {
+	filename, err := u.repo.GetTableName(id)
+	if err != nil {
+		return nil
+	}
+	result := &domain.Table{ID: id, Path: filename}
+	result.Rows = xslx.ReadTable(filename)
+	return result
+}
+
 func (u *serverUsecases) ExportXlsx(id int) string {
 	filename, err := u.repo.GetTableName(id)
 	if err != nil {
@@ -170,3 +180,37 @@ func (u *serverUsecases) CheckAuth(cookie string, pool int) int {
 }
 
 var hasher = gost34112012512.New()
+
+func (u *serverUsecases) ChangeCorrect(pool, id int, coefs *domain.CorrectCoefs) *domain.PatternAnalogs {
+	ptn := u.repo.ChangeCorrect(pool, id, coefs)
+	if ptn == 0 {
+		return nil
+	}
+	analogs, corrects := u.repo.GetAnalogs(pool, ptn)
+	sum := 0.0
+	for _, a := range analogs {
+		sum += a.AvgCost
+	}
+	sum /= float64(len(analogs))
+	if u.repo.SavePatternPrice(pool, ptn, sum) != nil {
+		return nil
+	}
+	return &domain.PatternAnalogs{Pattern: &domain.Row{ID: ptn, AvgCost: sum}, Analogs: analogs, Correct: corrects}
+}
+
+func (u *serverUsecases) ChangeAnalog(pool, id int) *domain.PatternAnalogs {
+	ptn := u.repo.ChangeAnalog(pool, id)
+	if ptn == 0 {
+		return nil
+	}
+	analogs, corrects := u.repo.GetAnalogs(pool, ptn)
+	sum := 0.0
+	for _, a := range analogs {
+		sum += a.AvgCost
+	}
+	sum /= float64(len(analogs))
+	if u.repo.SavePatternPrice(pool, ptn, sum) != nil {
+		return nil
+	}
+	return &domain.PatternAnalogs{Pattern: &domain.Row{ID: ptn, AvgCost: sum}, Analogs: analogs, Correct: corrects}
+}
