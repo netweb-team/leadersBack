@@ -27,7 +27,8 @@ const (
 	selectUser       = `select id, login, pass from users where login = $1;`
 	selectCookiePool = `select c.user_id from cookies c join tables t on c.user_id = t.user_id where c.cookie = $1 and t.id = $2;`
 	updateAnalog     = `update analogs set sale_coef = $1, total_coef = $2, metro_coef = $3, floor_coef = $4, kitchen_coef = $5, balcony_coef = $6,
-	state_coef = $7 where pool = $8 and id = $9 returning pattern;`
+	state_coef = $7, avg_price=(price/total)*(1::float8+$1)*(1::float8+$2)*(1::float8+$3)*(1::float8+$4)*(1::float8+$5)*(1::float8+$6)+$7 
+	where pool = $8 and id = $9 returning pattern;`
 	updateAnalogFlag = `update analogs set use = not use where pool = $1 and id = $2 returning pattern;`
 	updatePattern    = `update patterns set avg_price = $3 where pool_id = $1 and pattern = $2;`
 )
