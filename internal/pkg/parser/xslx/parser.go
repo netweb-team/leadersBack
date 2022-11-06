@@ -168,17 +168,26 @@ func SavePrice(filename string, table []*domain.Row) string {
 		return ""
 	}
 	defer xl.Close()
-	// sh := xl.Sheet(0)
-	// col := sh.InsertCol(11)
-	// col.Cell(0).SetValue("Price")
+	sh := xl.Sheet(0)
 
-	// for i, row := range table {
-	// 	row.Cost = int(row.AvgCost * row.Total)
-	// 	col.Cell(i + 1).SetInt(row.Cost)
-	// }
-	// path := config.New().Path + utils.RandString(nameLen) + ext
-	xl.Save()
-	return ""
+	xlp := xlsx.New()
+	defer xlp.Close()
+	shp := xlp.AddSheet("Sheet 1")
+	cols, rows := sh.Dimension()
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			shp.Cell(j, i).SetValue(sh.Cell(j, i))
+		}
+	}
+	shp.CellByRef("L1").SetText("Цена")
+	for i, row := range table {
+		row.Cost = int(row.AvgCost * row.Total)
+		shp.Cell(11, i+1).SetValue(row.Cost)
+	}
+
+	path := config.New().Path + utils.RandString(nameLen) + ext
+	xlp.SaveAs(path)
+	return path
 }
 
 func ReadPrice(filename string, table []*domain.Row) error {
