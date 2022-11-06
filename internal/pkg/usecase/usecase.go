@@ -122,7 +122,10 @@ func (u *serverUsecases) CalcPool(id int) []*domain.Row {
 	for i := range groups {
 		correct.Do(data[i].Pattern, groups[i])
 	}
-	_ = xslx.SavePrice(filename, table)
+	path := filename
+	filename = xslx.SavePrice(filename, table)
+	u.repo.ChangePath(id, filename)
+	os.Remove(path)
 	return table
 }
 

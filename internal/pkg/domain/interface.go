@@ -23,6 +23,7 @@ type Repository interface {
 	SavePatternPrice(pool, id int, price float64) error
 	GetUserArchives(user int) []*Table
 	GetArchive(id int) *Table
+	ChangePath(id int, filename string)
 }
 
 type Usecase interface {

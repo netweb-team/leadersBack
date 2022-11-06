@@ -161,22 +161,24 @@ func parseRow(sheet xlsx.Sheet, i, total int) *domain.Row {
 	return row
 }
 
-func SavePrice(filename string, table []*domain.Row) error {
+func SavePrice(filename string, table []*domain.Row) string {
 	xl, err := xlsx.Open(filename)
 	if err != nil {
 		log.Error("Cannot open file for read: ", err)
-		return err
+		return ""
 	}
 	defer xl.Close()
 	sh := xl.Sheet(0)
-	sh.Cell(11, 0).SetValue("Price")
+	col := sh.InsertCol(11)
+	col.Cell(0).SetValue("Price")
 
 	for i, row := range table {
 		row.Cost = int(row.AvgCost * row.Total)
-		sh.Cell(11, i+1).SetInt(row.Cost)
+		col.Cell(i + 1).SetInt(row.Cost)
 	}
-	xl.Save()
-	return nil
+	path := config.New().Path + utils.RandString(nameLen) + ext
+	xl.SaveAs(path)
+	return path
 }
 
 func ReadPrice(filename string, table []*domain.Row) error {

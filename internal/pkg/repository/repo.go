@@ -12,6 +12,7 @@ import (
 
 const (
 	insertTable     = `insert into tables(path, user_id, flats) values($1, $2, $3) returning id;`
+	updateTable     = `update tables set path = $1 where id = $2;`
 	selectTableName = `select path from tables where id = $1;`
 	insertPattern   = `insert into patterns(pool_id, pattern, lng, lat, avg_price) values($1, $2, $3, $4, $5);`
 	insertAnalog    = `insert into analogs(lng,lat,addr,room,segment,floors,cur_floor,walls,total,kitchen,balcony,metro,state,price,avg_price,
@@ -31,8 +32,8 @@ const (
 	where pool = $8 and id = $9 returning pattern;`
 	updateAnalogFlag   = `update analogs set use = not use where pool = $1 and id = $2 returning pattern;`
 	updatePattern      = `update patterns set avg_price = $3 where pool_id = $1 and pattern = $2;`
-	selectUserArchives = `select id, cdate, path, flats from archives where user_id = $1;`
-	selectArchive      = `select id, cdate, path, flats from archives where id = $1;`
+	selectUserArchives = `select id, cdate, path, flats from tables where user_id = $1;`
+	selectArchive      = `select id, cdate, path, flats from tables where id = $1;`
 )
 
 type dbRepository struct {
@@ -59,6 +60,10 @@ func (repo *dbRepository) GetTableName(id int) (string, error) {
 		log.Error("Unable to get path to table: ", err)
 	}
 	return name, err
+}
+
+func (repo *dbRepository) ChangePath(id int, filename string) {
+	repo.db.Pool.Exec(context.Background(), updateTable, filename, id)
 }
 
 func (repo *dbRepository) SaveAnalogs(id int, pattern *domain.Row, analogs []*domain.Row, coefs []*domain.CorrectCoefs) error {
