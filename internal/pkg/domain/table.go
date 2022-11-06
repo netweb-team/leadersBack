@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type Row struct {
 	ID        int     `json:"id,omitempty"`
 	Address   string  `json:"a"`
@@ -21,9 +23,12 @@ type Row struct {
 }
 
 type Table struct {
-	ID   int    `json:"id"`
-	Path string `json:"path"`
-	Rows []*Row `json:"table"`
+	ID   int               `json:"id"`
+	Path string            `json:"path"`
+	Rows []*Row            `json:"table,omitempty"`
+	Flat int               `json:"count,omitempty"`
+	Time time.Time         `json:"time,omitempty"`
+	PA   []*PatternAnalogs `json:"pa,omitempty"`
 }
 
 type CorrectCoefs struct {

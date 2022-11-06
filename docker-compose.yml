@@ -17,7 +17,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./nginx:/etc/nginx
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ../certs:/certs
       - ./tables:/tables
       - ../static:/static

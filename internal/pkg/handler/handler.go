@@ -66,9 +66,11 @@ func (h *serverHandlers) GetPool(ctx echo.Context) error {
 		log.Info("Bad pattern query param: ", err)
 	} else if ctx.QueryParam("download") == "1" {
 		if file := h.uc.ExportXlsx(id); file != "" {
+			ctx.Response().Header().Set("Content-Description", "File Transfer")
+			ctx.Response().Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 			return ctx.Attachment(file, file)
 		}
-	} else if result := h.uc.GetPool(id); result != nil {
+	} else if result := h.uc.GetArchive(id); result != nil {
 		return EchoResponse(ctx, http.StatusOK, result)
 	}
 	return EchoResponse(ctx, http.StatusNotFound, nil)
@@ -98,6 +100,7 @@ func newCookie(value string) *http.Cookie {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
 	}
 }
 
@@ -113,6 +116,13 @@ func (h *serverHandlers) SignUp(ctx echo.Context) error {
 	}
 	ctx.SetCookie(newCookie(value))
 	return EchoResponse(ctx, http.StatusCreated, nil)
+}
+
+func (h *serverHandlers) SignOK(ctx echo.Context) error {
+	if c, err := ctx.Cookie("session"); err != nil || h.uc.CheckAuth(c.Value, 0) == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
+	}
+	return EchoResponse(ctx, http.StatusOK, nil)
 }
 
 func (h *serverHandlers) SignIn(ctx echo.Context) error {
@@ -164,6 +174,20 @@ func (h *serverHandlers) ChangePool(ctx echo.Context) error {
 			}
 		}
 		log.Info("Bad pattern query param: ", err)
+	}
+	return EchoResponse(ctx, http.StatusNotFound, nil)
+}
+
+func (h *serverHandlers) GetUserArchives(ctx echo.Context) error {
+	user := 0
+	if c, err := ctx.Cookie("session"); err == nil {
+		user = h.uc.CheckAuth(c.Value, 0)
+	}
+	if user == 0 {
+		return EchoResponse(ctx, http.StatusForbidden, nil)
+	}
+	if result := h.uc.GetUserArchives(user); result != nil {
+		return EchoResponse(ctx, http.StatusOK, result)
 	}
 	return EchoResponse(ctx, http.StatusNotFound, nil)
 }

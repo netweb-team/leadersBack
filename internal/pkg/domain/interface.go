@@ -7,7 +7,7 @@ import (
 )
 
 type Repository interface {
-	SaveTable(filename string, user int) (int, error)
+	SaveTable(filename string, user, count int) (int, error)
 	GetTableName(id int) (string, error)
 	SaveAnalogs(id int, pattern *Row, analogs []*Row, coefs []*CorrectCoefs) error
 	GetPatternAnalogs(id int) ([]*PatternAnalogs, error)
@@ -21,11 +21,12 @@ type Repository interface {
 	ChangeCorrect(pool, id int, coefs *CorrectCoefs) int
 	ChangeAnalog(pool, id int) int
 	SavePatternPrice(pool, id int, price float64) error
+	GetUserArchives(user int) []*Table
+	GetArchive(id int) *Table
 }
 
 type Usecase interface {
 	ImportXlsx(f io.Reader, user int) *Table
-	GetPool(id int) *Table
 	FindAnalogs(id, ptnIndex int) *PatternAnalogs
 	CalcPool(id int) []*Row
 	ExportXlsx(id int) string
@@ -35,6 +36,8 @@ type Usecase interface {
 	CheckAuth(cookie string, pool int) int
 	ChangeCorrect(pool, id int, coefs *CorrectCoefs) *PatternAnalogs
 	ChangeAnalog(pool, id int) *PatternAnalogs
+	GetUserArchives(user int) []*Table
+	GetArchive(id int) *Table
 }
 
 type Handler interface {
@@ -42,7 +45,9 @@ type Handler interface {
 	GetPool(ctx echo.Context) error
 	CalcPool(ctx echo.Context) error
 	SignUp(ctx echo.Context) error
+	SignOK(ctx echo.Context) error
 	SignIn(ctx echo.Context) error
 	SignOut(ctx echo.Context) error
 	ChangePool(ctx echo.Context) error
+	GetUserArchives(ctx echo.Context) error
 }
