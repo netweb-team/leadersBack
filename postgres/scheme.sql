@@ -61,5 +61,6 @@ create table archive (
     price float8[] not null default '{}',
     analogs json[] not null default '{}',
     coefs json[] not null default '{}',
-    price_path text not null
+    price_path text not null,
+    user_id int not null
 );
