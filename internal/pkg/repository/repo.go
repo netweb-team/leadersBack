@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	insertTable     = `insert into tables(path, user_id) values($1, $2) returning id;`
+	insertTable     = `insert into tables(path, user_id, flats) values($1, $2, $3) returning id;`
 	selectTableName = `select path from tables where id = $1;`
 	insertPattern   = `insert into patterns(pool_id, pattern, lng, lat, avg_price) values($1, $2, $3, $4, $5);`
 	insertAnalog    = `insert into analogs(lng,lat,addr,room,segment,floors,cur_floor,walls,total,kitchen,balcony,metro,state,price,avg_price,
@@ -29,8 +29,10 @@ const (
 	updateAnalog     = `update analogs set sale_coef = $1, total_coef = $2, metro_coef = $3, floor_coef = $4, kitchen_coef = $5, balcony_coef = $6,
 	state_coef = $7, avg_price=(price/total)*(1::float8+$1)*(1::float8+$2)*(1::float8+$3)*(1::float8+$4)*(1::float8+$5)*(1::float8+$6)+$7 
 	where pool = $8 and id = $9 returning pattern;`
-	updateAnalogFlag = `update analogs set use = not use where pool = $1 and id = $2 returning pattern;`
-	updatePattern    = `update patterns set avg_price = $3 where pool_id = $1 and pattern = $2;`
+	updateAnalogFlag   = `update analogs set use = not use where pool = $1 and id = $2 returning pattern;`
+	updatePattern      = `update patterns set avg_price = $3 where pool_id = $1 and pattern = $2;`
+	selectUserArchives = `select id, cdate, path, flats from archives where user_id = $1;`
+	selectArchive      = `select id, cdate, path, flats from archives where id = $1;`
 )
 
 type dbRepository struct {
@@ -41,9 +43,9 @@ func New(db *database.DBManager) domain.Repository {
 	return &dbRepository{db}
 }
 
-func (repo *dbRepository) SaveTable(filename string, user int) (int, error) {
+func (repo *dbRepository) SaveTable(filename string, user, count int) (int, error) {
 	var id int
-	err := repo.db.Pool.QueryRow(context.Background(), insertTable, filename, user).Scan(&id)
+	err := repo.db.Pool.QueryRow(context.Background(), insertTable, filename, user, count).Scan(&id)
 	if err != nil {
 		log.Error("Unable to save path to table: ", err)
 	}
@@ -201,4 +203,33 @@ func (repo *dbRepository) SavePatternPrice(pool, id int, price float64) error {
 		log.Info(fmt.Sprint("Cannot update pattern price: ", pool, id, err))
 	}
 	return err
+}
+
+func (repo *dbRepository) GetUserArchives(user int) []*domain.Table {
+	rows, err := repo.db.Pool.Query(context.Background(), selectUserArchives, user)
+	if err != nil {
+		log.Error(fmt.Sprint("Cannot get user archives: ", user, err))
+		return nil
+	}
+	defer rows.Close()
+
+	result := make([]*domain.Table, 0)
+	for rows.Next() {
+		row := &domain.Table{}
+		if err := rows.Scan(&row.ID, &row.Time, &row.Path, &row.Flat); err != nil {
+			continue
+		}
+		result = append(result, row)
+	}
+	return result
+}
+
+func (repo *dbRepository) GetArchive(id int) *domain.Table {
+	result := new(domain.Table)
+	err := repo.db.Pool.QueryRow(context.Background(), selectArchive, id).Scan(&result.ID, &result.Time, &result.Path, &result.Flat)
+	if err != nil {
+		log.Error(fmt.Sprint("Cannot get archive: ", id, err))
+		return nil
+	}
+	return result
 }

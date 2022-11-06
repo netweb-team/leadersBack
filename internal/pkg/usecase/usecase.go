@@ -32,21 +32,11 @@ func (u *serverUsecases) ImportXlsx(f io.Reader, user int) *domain.Table {
 		return nil
 	}
 
-	if data.ID, err = u.repo.SaveTable(data.Path, user); err != nil {
+	if data.ID, err = u.repo.SaveTable(data.Path, user, data.Flat); err != nil {
 		os.Remove(data.Path)
 		return nil
 	}
 	return data
-}
-
-func (u *serverUsecases) GetPool(id int) *domain.Table {
-	filename, err := u.repo.GetTableName(id)
-	if err != nil {
-		return nil
-	}
-	result := &domain.Table{ID: id, Path: filename}
-	result.Rows = xslx.ReadTable(filename)
-	return result
 }
 
 func (u *serverUsecases) ExportXlsx(id int) string {
@@ -133,7 +123,6 @@ func (u *serverUsecases) CalcPool(id int) []*domain.Row {
 		correct.Do(data[i].Pattern, groups[i])
 	}
 	_ = xslx.SavePrice(filename, table)
-	//save to db archive
 	return table
 }
 
@@ -213,4 +202,21 @@ func (u *serverUsecases) ChangeAnalog(pool, id int) *domain.PatternAnalogs {
 		return nil
 	}
 	return &domain.PatternAnalogs{Pattern: &domain.Row{ID: ptn, AvgCost: sum}, Analogs: analogs, Correct: corrects}
+}
+
+func (u *serverUsecases) GetUserArchives(user int) []*domain.Table {
+	return u.repo.GetUserArchives(user)
+}
+
+func (u *serverUsecases) GetArchive(id int) *domain.Table {
+	archive := u.repo.GetArchive(id)
+	if archive == nil {
+		return nil
+	}
+	archive.Rows = xslx.ReadTable(archive.Path)
+	if err := xslx.ReadPrice(archive.Path, archive.Rows); err != nil {
+		return nil
+	}
+	archive.PA, _ = u.repo.GetPatternAnalogs(id)
+	return archive
 }
