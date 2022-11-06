@@ -57,9 +57,9 @@ create table analogs (
 create table archive (
     id serial primary key,
     pool int not null,
-    pattern int not null,
-    price float8 not null,
-    analogs json,
-    coefs json,
+    pattern int[] not null default '{}',
+    price float8[] not null default '{}',
+    analogs json[] not null default '{}',
+    coefs json[] not null default '{}',
     price_path text not null
 );
