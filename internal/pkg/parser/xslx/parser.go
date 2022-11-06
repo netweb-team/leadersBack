@@ -176,7 +176,7 @@ func SavePrice(filename string, table []*domain.Row) string {
 	cols, rows := sh.Dimension()
 	for i := 0; i < rows; i++ {
 		for j := 0; j < cols; j++ {
-			shp.Cell(j, i).SetValue(sh.Cell(j, i))
+			shp.Cell(j, i).SetValue(sh.Cell(j, i).Value())
 		}
 	}
 	shp.CellByRef("L1").SetText("Цена")
